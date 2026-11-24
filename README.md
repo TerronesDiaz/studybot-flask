@@ -14,6 +14,9 @@ Universidad de Colima.
 
 Las pruebas realizadas y las respuestas a las preguntas están en [ENTREGA.md](ENTREGA.md).
 
+**Aplicación en línea:** <https://fterrones.pythonanywhere.com/>. Está desplegada en PythonAnywhere,
+plan gratuito.
+
 ## Ejecutar
 
 Requiere Python 3.10 o superior. Desde la carpeta del proyecto:
@@ -38,7 +41,8 @@ servidor, pulsa Ctrl+C.
 | `studybot_model.joblib` | Modelo KNN ya entrenado. |
 | `train_model.py` | Paso 1: reproduce el entrenamiento de la segunda entrega y guarda el modelo. |
 | `probar_prediccion.py` | Paso 2: prueba la función de predicción sin la página web. |
-| `evidencia/` | Capturas de las pruebas en la aplicación. |
+| `evidencia/` | Capturas de las pruebas en la aplicación local y en la desplegada. |
+| `Dockerfile` | Imagen con gunicorn para desplegar en una plataforma con contenedores. |
 
 Los dos scripts siguientes son opcionales; la app funciona sin ejecutarlos:
 
@@ -46,3 +50,33 @@ Los dos scripts siguientes son opcionales; la app funciona sin ejecutarlos:
 python probar_prediccion.py   # prueba la función con cuatro combinaciones
 python train_model.py         # vuelve a generar studybot_model.joblib (mismo resultado)
 ```
+
+## Despliegue en PythonAnywhere
+
+Pasos seguidos con una cuenta Beginner, que es gratuita:
+
+1. En una consola Bash de PythonAnywhere:
+
+   ```bash
+   git clone https://github.com/TerronesDiaz/studybot-flask.git
+   python3.12 -m venv ~/.virtualenvs/studybot
+   ~/.virtualenvs/studybot/bin/pip install --no-cache-dir -r ~/studybot-flask/requirements.txt
+   ```
+
+2. En **Web → Add a new web app**, elegir *Manual configuration* y Python 3.12.
+3. En la configuración de la app, poner *Source code* `/home/<usuario>/studybot-flask` y
+   *Virtualenv* `/home/<usuario>/.virtualenvs/studybot`.
+4. Reemplazar el archivo WSGI (`/var/www/<usuario>_pythonanywhere_com_wsgi.py`) por:
+
+   ```python
+   import sys
+   path = '/home/<usuario>/studybot-flask'
+   if path not in sys.path:
+       sys.path.insert(0, path)
+   from app import app as application
+   ```
+
+5. Pulsar **Reload**. En la cuenta gratuita hay que entrar una vez al mes y pulsar
+   *Run until 1 month from today* para que la app no se desactive.
+
+El repositorio también incluye un `Dockerfile` que sirve la app con gunicorn, para plataformas que usan contenedores.

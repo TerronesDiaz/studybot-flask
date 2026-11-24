@@ -59,6 +59,25 @@ Se copió el proyecto, sin `.venv`, a una carpeta nueva y se siguieron solo los 
 crear `.venv`, `pip install -r requirements.txt` y `python app.py`. La app inició en
 `http://127.0.0.1:5000` y dio las mismas cuatro predicciones de la tabla: APTO, NO APTO, NO APTO y APTO.
 
+## Adicional. Despliegue en la nube
+
+La app está publicada en **<https://fterrones.pythonanywhere.com/>**, en PythonAnywhere con una cuenta
+Beginner gratuita y Python 3.12. Tiene su propio entorno virtual con las mismas versiones de
+`requirements.txt` y un archivo WSGI que importa `app` desde el repositorio clonado. Los pasos
+están en el README.
+
+Se repitieron las pruebas contra la URL pública y dieron los mismos resultados que en local:
+
+| Prueba | Resultado en línea |
+| --- | --- |
+| Sala de estudio completa | APTO (2 de 2 vecinos) |
+| Explanada al aire libre | NO APTO (0 de 2 vecinos) |
+| Pasillo silencioso con clima, sin wifi ni mesa | NO APTO (1 de 2, empate) |
+| Todo excepto silencio | APTO (2 de 2 vecinos) |
+| `silencio=abc`, `internet_wifi=5` | HTTP 400 con los dos errores de validación |
+
+Captura: [`evidencia/despliegue_pythonanywhere.png`](evidencia/despliegue_pythonanywhere.png).
+
 ## Respuestas
 
 **1. ¿Qué contiene el archivo `studybot_model.joblib`?**
@@ -85,3 +104,5 @@ DataFrame con esas columnas.
 y sin seguridad. Un despliegue real usa un servidor WSGI de producción (gunicorn, waitress) detrás de
 HTTPS. Además tiene una dirección pública, aguanta varios usuarios a la vez, registra errores,
 reinicia la app si falla, fija versiones de librerías y protege el servicio contra abusos.
+En el despliegue de esta práctica, PythonAnywhere ejecuta la app con su propio servidor WSGI, con
+HTTPS y una URL pública. Por eso la línea `app.run()` de `app.py` no se usa ahí.
