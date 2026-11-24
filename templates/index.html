@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudyBot · ¿Es apto para trabajar?</title>
+<style>
+  :root {
+    --bg: #f3f5f1; --card: #ffffff; --ink: #1d2a22; --muted: #5d6b62; --line: #d5ddd6;
+    --accent: #2f6b4f; --accent-soft: #e3efe7; --bad: #a3332f; --bad-soft: #f8e4e2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 1rem/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+  .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: .8rem; }
+  h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); line-height: 1.15; margin: .2em 0 .3em; }
+  .intro { color: var(--muted); margin: 0 0 28px; }
+  form { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 8px 20px 20px; }
+  .campo { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .campo:last-of-type { border-bottom: 0; }
+  .campo strong { display: block; }
+  .campo small { color: var(--muted); }
+  .campo .error { color: var(--bad); font-weight: 600; }
+  fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-shrink: 0; }
+  legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  fieldset input { position: absolute; opacity: 0; pointer-events: none; }
+  fieldset label { cursor: pointer; padding: 7px 16px; border: 1px solid var(--line); background: #f8faf8; font-weight: 600; color: var(--muted); }
+  fieldset label:first-of-type { border-radius: 8px 0 0 8px; }
+  fieldset label:last-of-type { border-radius: 0 8px 8px 0; border-left: 0; }
+  fieldset input:checked + label { background: var(--accent); border-color: var(--accent); color: #fff; }
+  fieldset input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .acciones { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 12px 22px; background: var(--accent); color: #fff; cursor: pointer; }
+  a.limpiar { align-self: center; color: var(--muted); }
+  .resultado { margin: 0 0 24px; border-radius: 16px; padding: 20px; border: 1px solid; }
+  .resultado.apto { background: var(--accent-soft); border-color: var(--accent); }
+  .resultado.no-apto { background: var(--bad-soft); border-color: var(--bad); }
+  .resultado .veredicto { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+  .apto .veredicto { color: var(--accent); }
+  .no-apto .veredicto { color: var(--bad); }
+  .resultado p { margin: 6px 0 0; color: var(--muted); }
+  .aviso { background: var(--bad-soft); color: var(--bad); border-radius: 12px; padding: 12px 16px; margin: 0 0 20px; font-weight: 600; }
+  footer { color: var(--muted); font-size: .85rem; margin-top: 24px; }
+  @media (max-width: 480px) { .campo { flex-direction: column; align-items: flex-start; gap: 8px; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">StudyBot</div>
+  <h1>¿Este lugar es apto para trabajar 30 minutos?</h1>
+  <p class="intro">Marca qué tiene el lugar. El modelo KNN (k = {{ k }}) entrenado con el Dataset v1.0 lo compara con los lugares del campus que ya conoce.</p>
+
+  {% if resultado %}
+  <section class="resultado {{ 'apto' if resultado.clase == 1 else 'no-apto' }}" aria-live="polite">
+    <div class="veredicto">{{ resultado.etiqueta }}</div>
+    <p>{{ (resultado.prob_apto * k) | round | int }} de {{ k }} vecinos más cercanos son aptos ({{ '%.0f' | format(resultado.prob_apto * 100) }} %).
+    {% if resultado.prob_apto == 0.5 %}Empate: el modelo lo resuelve como NO APTO.{% endif %}</p>
+  </section>
+  {% endif %}
+
+  {% if errores %}
+  <div class="aviso" role="alert">Revisa los campos marcados: cada uno debe ser 0 (no) o 1 (sí).</div>
+  {% endif %}
+
+  <form method="post" action="/">
+    {% for columna, titulo, ayuda in campos %}
+    <div class="campo">
+      <div>
+        <strong id="t-{{ columna }}">{{ titulo }}</strong>
+        {% if errores.get(columna) %}<small class="error">{{ errores[columna] }}</small>{% else %}<small>{{ ayuda }}</small>{% endif %}
+      </div>
+      <fieldset aria-labelledby="t-{{ columna }}">
+        <legend>{{ titulo }}</legend>
+        <input type="radio" id="{{ columna }}-1" name="{{ columna }}" value="1" required {{ 'checked' if valores.get(columna) == '1' }}>
+        <label for="{{ columna }}-1">Sí</label>
+        <input type="radio" id="{{ columna }}-0" name="{{ columna }}" value="0" {{ 'checked' if valores.get(columna) == '0' }}>
+        <label for="{{ columna }}-0">No</label>
+      </fieldset>
+    </div>
+    {% endfor %}
+    <div class="acciones">
+      <button type="submit">Predecir</button>
+      <a class="limpiar" href="/">Limpiar</a>
+    </div>
+  </form>
+
+  <footer>Modelo: studybot_model.joblib · Dataset: Kaggle schiaffino89/lugares-aptos-para-trabajar (v1.0)</footer>
+</main>
+</body>
+</html>
