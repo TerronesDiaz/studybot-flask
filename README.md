@@ -19,7 +19,7 @@ plan gratuito.
 
 ## Ejecutar
 
-Requiere Python 3.10 o superior. Desde la carpeta del proyecto:
+Requiere Python 3.12 o superior. Desde la carpeta del proyecto:
 
 ```bash
 python3 -m venv .venv
